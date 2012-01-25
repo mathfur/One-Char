@@ -14,15 +14,14 @@ term ::: Term = word ('(' (term ';')+ ')')? { Term (Word $1) (fromMaybe [] $2) }
 word :: Char = [a-z]
 |]
 
-g :: String -> [String] -> String
-g s x = s ++ "(" ++ (intercalate ";" x) ++ ")"
+toString :: String -> [String] -> String
+toString name args = name ++ "(" ++ (intercalate ";" args) ++ ")"
 
 expandTerm :: Term -> StateT [(Char, String)] Identity String
 expandTerm (Term (Word c) ts) = do
-  pairs <- get
-  let source = fromMaybe [c] $ lookup c pairs
+  source <- gets ((fromMaybe [c] ).(lookup c ))
   xs <- (mapM expandTerm ts)
-  return $ g source xs
+  return $ toString source xs
 
 main = do
   let environment = [('f', "function"), ('h', "hash"), ('a', "array"), ('o', "object")] 
