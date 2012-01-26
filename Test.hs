@@ -10,7 +10,8 @@ data Word = Word Char deriving Show
 data Term = Term Word [Term] deriving Show
 
 [peggy|
-term ::: Term = word ('(' (term ';')+ ')')? { Term (Word $1) (fromMaybe [] $2) }  -- a(b;cd();)
+term ::: Term = word ('(' terms ')')? { Term (Word $1) (fromMaybe [] $2) }  -- a(b;cd();)
+terms ::: [Term] = (term ';')+
 word :: Char = [a-z]
 |]
 
@@ -19,7 +20,7 @@ toString name args = name ++ "(" ++ (intercalate ";" args) ++ ")"
 
 expandTerm :: Term -> StateT [(Char, String)] Identity String
 expandTerm (Term (Word c) ts) = do
-  source <- gets ((fromMaybe [c] ).(lookup c ))
+  source <- gets ((fromMaybe [c] ).(lookup c))
   xs <- (mapM expandTerm ts)
   return $ toString source xs
 
