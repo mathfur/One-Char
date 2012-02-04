@@ -26,11 +26,8 @@ import           Snap.Snaplet.Heist
 import           Snap.Util.FileServe
 import           Text.Templating.Heist
 import           Text.XmlHtml hiding (render)
-
+import qualified Data.ByteString.Char8 as B
 import           Application
-
-
-
 import Text.Peggy
 import Data.Maybe
 import Data.List
@@ -59,11 +56,20 @@ index2 = ifTop $ heistLocal (bindSplices index2Splices) $ render "index2"
 
 compiledSourceSplice :: Int -> Splice AppHandler
 compiledSourceSplice n = do
-    time <- liftIO getCurrentTime
     statement <- decodedParam "statement" 
-    return $ [TextNode $ T.pack $ show statement]
+    result <- (liftIO $ foo $ B.unpack statement)
+    return $ [TextNode $ T.pack (B.unpack (statement) ++ " -> " ++ result)]
   where
     decodedParam p = fromMaybe "" <$> getParam p
+
+foo :: String -> IO String
+foo src = do
+    case (parseString expr "" src) of
+      Right e -> do
+        result <- mapM expand [e]
+        return ( src ++ "\t=>\t" ++ (intercalate "| " result) )
+      Left e -> do
+        return $ show e
 
 ------------------------------------------------------------------------------
 -- | For your convenience, a splice which shows the start time.
