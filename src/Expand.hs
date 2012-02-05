@@ -25,7 +25,7 @@ expandFromExpr (Func as expr) = do
       expandArg :: Arg -> IO String
       expandArg = getWord.arg2String
 expandFromExpr (Sequence_ (Target d cs) os) = do
-  c_ <- getWord cs
+  c_ <- if (cs == "@") then (return "self") else getWord cs
   os_ <- joinToString (intercalate ".") expandOper os
   return $ c_ ++ (if (null os_) then "" else ("." ++ os_))
     where
@@ -40,7 +40,7 @@ getWord xs = do
   return $ B.unpack (candidate dicWords)
     where
       candidate as = if (0 == length (candidates as)) then "" else (head (candidates as))
-      candidates as = filter (isIncludedByMeaningOfEachWord $ B.pack xs) as
+      candidates as = filter (isIncludedByMeaningOfEachWord $ B.pack xs) $ filter (haveSameHead (B.pack xs)) $ as
 
 -- 例) as = 'intzn', bs = 'internationalization' -> true
 isIncludedByMeaningOfEachWord :: B.ByteString -> B.ByteString -> Bool
@@ -51,6 +51,12 @@ isIncludedByMeaningOfEachWord as bs
   | otherwise = (isIncludedByMeaningOfEachWord (B.tail as) bs')
     where
       bs' = snd $ B.breakEnd ((==) $ (B.head as)) bs
+
+haveSameHead :: B.ByteString -> B.ByteString -> Bool
+haveSameHead as bs
+  | (B.null as && B.null bs) = True
+  | (B.null as || B.null bs) = False
+  | otherwise = (B.head as == B.head bs)
 
 joinToString :: ([String] -> String) -> (a -> IO String) -> [a] -> IO String
 joinToString g f as = (mapM f as)>>=(return.g)

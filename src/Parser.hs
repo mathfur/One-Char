@@ -16,7 +16,8 @@ import Expand
 [peggy|
 expr :: Expr_ = target operation+ { Sequence_ $1 $2 }
 
-target :: Target = [a-z]+ [0-9] { Target $2 $1 }
+target :: Target = '@' { Target '9' "@" }
+  / [a-z]+ [0-9] { Target $2 $1 }
 operation :: Operation = prefix ('(' inner_parenthsis ')')? { Operation $1 (fromMaybe [] $2) }
 
 inner_parenthsis :: [Expr_] = head_args ('>' tail_args)? { $1 ++ fromMaybe [] $2 }
