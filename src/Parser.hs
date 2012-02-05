@@ -14,7 +14,10 @@ import OneCharType
 import Expand
 
 [peggy|
-expr :: Expr_ = target operation+ { Sequence_ $1 $2 }
+expr :: Expr_ = '`' inner_backquote '`' { PlainText $1 }
+  / target operation+ { Sequence_ $1 $2 }
+
+inner_backquote :: String = [^`]+ ('\`' [^`]*)* { $1 ++ (intercalate [] $ map (\cs -> ['`'] ++ cs) $2) }
 
 target :: Target = '@' { Target '9' "@" }
   / [a-z]+ [0-9] { Target $2 $1 }
@@ -40,6 +43,8 @@ mainParser :: String -> Either ParseError Expr_
 mainParser = parseString expr ""
 
 main = do
-  case (mainParser "@ec4") of
+  let x1 = "@ec4(>`each.function(e){ return 10 }`)"
+  let x2 = "@e4"
+  case (mainParser x2) of
     Right e -> (expandFromExpr e)>>=print
     Left e -> print e

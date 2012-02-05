@@ -5,6 +5,7 @@ module OneCharType where
 data Expr_ = Obj [(Key, Expr_)]
           | Func [Arg] Expr_
           | Sequence_ Target [Operation]
+          | PlainText String
           deriving Show
 
 data Operation = Operation Prefix [Expr_] deriving Show

@@ -32,10 +32,11 @@ expandFromExpr (Sequence_ (Target d cs) os) = do
       expandOper :: Operation -> IO String
       expandOper (Operation (Prefix d cs) es) = do
         (++) <$> (getWordSpecifiedLength (Just $ read [d]) cs) <*> (joinToString (\xs -> "(" ++ (intercalate ", " xs) ++ ")") expandFromExpr es)
+expandFromExpr (PlainText cs) = return cs
 
 getWordSpecifiedLength :: (Maybe Int) -> String -> IO String
 getWordSpecifiedLength l xs = do
-  dicWords <- (B.readFile "../dic/dic.txt">>=(return.(B.split '\n')))
+  dicWords <- (B.readFile "dic/dic.txt">>=(return.(B.split '\n')))
   print $ xs ++ " -> '" ++ (B.unpack $ candidate dicWords) ++ "' #dicWords: " ++ show (length dicWords) ++ " #candidates:" ++ (show $ length $ candidates dicWords)
   return $ B.unpack (candidate dicWords)
     where
