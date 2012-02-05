@@ -35,7 +35,8 @@ expandFromExpr (Sequence_ (Target d cs) os) = do
 
 getWord :: String -> IO String
 getWord xs = do
-  dicWords <- (B.readFile "../dic/dic.txt">>=(return.(B.split '\n')))
+  dicWords <- (B.readFile "dic/dic.txt">>=(return.(B.split '\n')))
+  print $ xs ++ " -> '" ++ (B.unpack $ candidate dicWords) ++ "' #dicWords: " ++ show (length dicWords) ++ " #candidates:" ++ (show $ length $ candidates dicWords)
   return $ B.unpack (candidate dicWords)
     where
       candidate as = if (0 == length (candidates as)) then "" else (head (candidates as))
@@ -46,6 +47,7 @@ isIncludedByMeaningOfEachWord :: B.ByteString -> B.ByteString -> Bool
 isIncludedByMeaningOfEachWord as bs
   | (B.length as == 0) = True
   | (B.length bs == 0) = False
+  | (B.length bs == B.length bs') = False
   | otherwise = (isIncludedByMeaningOfEachWord (B.tail as) bs')
     where
       bs' = snd $ B.breakEnd ((==) $ (B.head as)) bs
