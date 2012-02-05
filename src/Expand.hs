@@ -16,31 +16,33 @@ expandFromExpr ( Obj pairs ) = do
   xss <-  mapM expandPair pairs
   return $ "{" ++ (intercalate ", " xss) ++ "}"
     where
-      expandPair :: (Char, Expr_) -> IO String
-      expandPair (c,expr) = do
-        (\a b -> a ++ ": " ++ b) <$> (getWord [c]) <*> (expandFromExpr expr)
+      expandPair :: (Key, Expr_) -> IO String
+      expandPair (Key d cs,expr) = do
+        (\a b -> a ++ ": " ++ b) <$> (getWordSpecifiedLength (Just $ read [d]) cs) <*> (expandFromExpr expr)
 expandFromExpr (Func as expr) = do
   (\a b -> "function(" ++ a ++ "){ return (" ++ b ++ ") }") <$> (joinToString (intercalate ", ") expandArg as) <*> (expandFromExpr expr)
     where
       expandArg :: Arg -> IO String
-      expandArg = getWord.arg2String
+      expandArg (Arg d cs) = getWordSpecifiedLength (Just $ read [d]) cs
 expandFromExpr (Sequence_ (Target d cs) os) = do
-  c_ <- if (cs == "@") then (return "self") else getWord cs
+  c_ <- if (cs == "@") then (return "self") else getWordSpecifiedLength (Just $ read [d]) cs
   os_ <- joinToString (intercalate ".") expandOper os
   return $ c_ ++ (if (null os_) then "" else ("." ++ os_))
     where
       expandOper :: Operation -> IO String
       expandOper (Operation (Prefix d cs) es) = do
-        (++) <$> (getWord cs) <*> (joinToString (\xs -> "(" ++ (intercalate ", " xs) ++ ")") expandFromExpr es)
+        (++) <$> (getWordSpecifiedLength (Just $ read [d]) cs) <*> (joinToString (\xs -> "(" ++ (intercalate ", " xs) ++ ")") expandFromExpr es)
 
-getWord :: String -> IO String
-getWord xs = do
-  dicWords <- (B.readFile "dic/dic.txt">>=(return.(B.split '\n')))
+getWordSpecifiedLength :: (Maybe Int) -> String -> IO String
+getWordSpecifiedLength l xs = do
+  dicWords <- (B.readFile "../dic/dic.txt">>=(return.(B.split '\n')))
   print $ xs ++ " -> '" ++ (B.unpack $ candidate dicWords) ++ "' #dicWords: " ++ show (length dicWords) ++ " #candidates:" ++ (show $ length $ candidates dicWords)
   return $ B.unpack (candidate dicWords)
     where
       candidate as = if (0 == length (candidates as)) then "" else (head (candidates as))
-      candidates as = filter (isIncludedByMeaningOfEachWord $ B.pack xs) $ filter (haveSameHead (B.pack xs)) $ as
+      candidates as = filter (\ys -> ((isNothing l) || (B.length ys == (fromJust l))))
+        $ filter (isIncludedByMeaningOfEachWord $ B.pack xs)
+        $ filter (haveSameHead (B.pack xs)) $ as
 
 -- 例) as = 'intzn', bs = 'internationalization' -> true
 isIncludedByMeaningOfEachWord :: B.ByteString -> B.ByteString -> Bool

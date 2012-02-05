@@ -2,7 +2,7 @@
 
 module OneCharType where
 
-data Expr_ = Obj [(Char, Expr_)]
+data Expr_ = Obj [(Key, Expr_)]
           | Func [Arg] Expr_
           | Sequence_ Target [Operation]
           deriving Show
@@ -14,6 +14,5 @@ data Arg = Arg { arg2Char :: Char, arg2String :: String } deriving Show
 
 -- Charには1桁の数字が入る
 data Target = Target Char String deriving Show
-
--- Charには1桁の数字が入る
 data Prefix = Prefix Char String deriving Show
+data Key = Key Char String deriving Show
