@@ -25,13 +25,28 @@ expandFromExpr (Func as expr) = do
       expandArg :: Arg -> IO String
       expandArg (Arg d cs) = getWordSpecifiedLength (Just $ read [d]) cs
 expandFromExpr (Sequence_ (Target d cs) os) = do
-  c_ <- if (cs == "@") then (return "self") else getWordSpecifiedLength (Just $ read [d]) cs
-  os_ <- joinToString (intercalate ".") expandOper os
-  return $ c_ ++ (if (null os_) then "" else ("." ++ os_))
+  os_ <- joinToString (intercalate "") expandOper os
+  case cs of
+    "@" -> return $ "self" ++ os_
+    "_" -> case os_ of
+       '.':remainder -> return remainder
+       _ -> return os_
+    _ -> do
+      expandedTarget <- (getWordSpecifiedLength (Just $ read [d]) cs)
+      return $ expandedTarget ++ os_
     where
       expandOper :: Operation -> IO String
       expandOper (Operation (Prefix d cs) es) = do
-        (++) <$> (getWordSpecifiedLength (Just $ read [d]) cs) <*> (joinToString (\xs -> "(" ++ (intercalate ", " xs) ++ ")") expandFromExpr es)
+        case cs of
+          "$" -> (joinToString (\xs -> "[" ++ (intercalate ", " xs) ++ "]") expandFromExpr es)
+          _ -> do
+            expandedExprs <- mapM expandFromExpr es
+            inner <- case (length expandedExprs) of
+              0 -> return ""
+              _ -> return $ "(" ++ (intercalate ", " expandedExprs) ++ ")"
+            expandedPrefix <- (getWordSpecifiedLength (Just $ read [d]) cs)
+            fs <- return $ expandedPrefix ++ inner
+            return $ "." ++ fs
 expandFromExpr (PlainText cs) = return cs
 
 getWordSpecifiedLength :: (Maybe Int) -> String -> IO String
@@ -53,7 +68,7 @@ isIncludedByMeaningOfEachWord as bs
   | (B.length bs == B.length bs') = False
   | otherwise = (isIncludedByMeaningOfEachWord (B.tail as) bs')
     where
-      bs' = snd $ B.breakEnd ((==) $ (B.head as)) bs
+      bs' = snd $ B.breakEnd (\c -> (B.head as == c)) bs
 
 haveSameHead :: B.ByteString -> B.ByteString -> Bool
 haveSameHead as bs

@@ -40,7 +40,7 @@ index = ifTop $ heistLocal (bindSplices indexSplices) $ render "index"
 
 compiledSourceSplice :: Splice AppHandler
 compiledSourceSplice = do
-    statement <- decodedParam "statement" 
+    statement <- decodedParam "statement"
     result <- (liftIO $ expand $ B.unpack statement)
     --return $ [TextNode $ T.pack $ ">>'" ++ (B.unpack statement) ++ "' -> '" ++ result ++ "'<<"]
     return $ [TextNode $ T.pack result]
