@@ -28,7 +28,7 @@ expandFromExpr (Sequence_ (Target d cs) os) = do
   os_ <- joinToString (intercalate "") expandOper os
   case cs of
     "@" -> return $ "self" ++ os_
-    "_" -> case os_ of
+    "#" -> case os_ of
        '.':remainder -> return remainder
        _ -> return os_
     _ -> do
@@ -50,15 +50,17 @@ expandFromExpr (Sequence_ (Target d cs) os) = do
 expandFromExpr (PlainText cs) = return cs
 
 getWordSpecifiedLength :: (Maybe Int) -> String -> IO String
-getWordSpecifiedLength l xs = do
-  dicWords <- (B.readFile "dic/dic.txt">>=(return.(B.split '\n')))
-  print $ xs ++ " -> '" ++ (B.unpack $ candidate dicWords) ++ "' #dicWords: " ++ show (length dicWords) ++ " #candidates:" ++ (show $ length $ candidates dicWords)
-  return $ B.unpack (candidate dicWords)
-    where
-      candidate as = if (0 == length (candidates as)) then "" else (head (candidates as))
-      candidates as = filter (\ys -> ((isNothing l) || (B.length ys == (fromJust l))))
-        $ filter (isIncludedByMeaningOfEachWord $ B.pack xs)
-        $ filter (haveSameHead (B.pack xs)) $ as
+getWordSpecifiedLength l xs
+  | (l == Just 1 && (0 < length xs)) = return [head xs]
+  | otherwise = do
+      dicWords <- (B.readFile "../dic/dic.txt">>=(return.(B.split '\n')))
+      print $ xs ++ " -> '" ++ (B.unpack $ candidate dicWords) ++ "' #dicWords: " ++ show (length dicWords) ++ " #candidates:" ++ (show $ length $ candidates dicWords)
+      return $ B.unpack (candidate dicWords)
+        where
+          candidate as = if (0 == length (candidates as)) then "" else (head (candidates as))
+          candidates as = filter (\ys -> ((isNothing l) || (B.length ys == (fromJust l))))
+            $ filter (isIncludedByMeaningOfEachWord $ B.pack xs)
+            $ filter (haveSameHead (B.pack xs)) $ as
 
 -- 例) as = 'intzn', bs = 'internationalization' -> true
 isIncludedByMeaningOfEachWord :: B.ByteString -> B.ByteString -> Bool
