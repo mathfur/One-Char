@@ -30,8 +30,8 @@ tail_args :: [Expr_] = second_args third_args func? { $1 ++ $2 ++ maybeToList $3
 
 second_args :: [Expr_] = expr*
 third_args :: [Expr_] = (' ' key ':' expr)* { if (null $1) then [] else [Obj $1] }
-func :: Expr_ = ' ' func_args '-' expr { Func $1 $2 }
-              / '.' expr           { Func [] $1 }
+func :: Expr_ = ' ' func_args '-' expr (';' expr)* { Func $1 ($2:$3) }
+              / '.' expr (';' expr)*  { Func [] ($1:$2) }
 
 key :: Key = [a-zA-Z_]+ [0-9] { Key $2 $1 }
 func_args :: [Arg] = func_arg*
