@@ -55,7 +55,7 @@ getWordSpecifiedLength :: (Maybe Int) -> String -> IO String
 getWordSpecifiedLength l xs
   | (l == Just 1 && (0 < length xs)) = return [head xs]
   | otherwise = do
-      dicWords <- (B.readFile "../dic/dic.txt">>=(return.(B.split '\n')))
+      dicWords <- (B.readFile "dic/dic.txt">>=(return.(B.split '\n')))
       print $ xs ++ " -> '" ++ (B.unpack $ candidate dicWords) ++ "' #dicWords: " ++ show (length dicWords) ++ " #candidates:" ++ (show $ length $ candidates dicWords)
       return $ B.unpack (candidate dicWords)
         where
