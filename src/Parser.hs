@@ -14,10 +14,12 @@ import OneCharType
 import Expand
 
 [peggy|
-expr :: Expr_ = '`' inner_backquote '`' { PlainText $1 }
+expr :: Expr_ = '\"' inner_doublequote '\"' { PlainText $ "\"" ++ $1 ++ "\""}
+  / '`' inner_backquote '`' { PlainText $1 }
   / target operation+ { Sequence_ $1 $2 }
 
-inner_backquote :: String = [^`]+ ('\`' [^`]*)* { $1 ++ (intercalate [] $ map (\cs -> ['`'] ++ cs) $2) }
+inner_doublequote :: String = [^"]+ ('\\\"' [^"]*)* { $1 ++ (intercalate [] $ map (\cs -> ['\"'] ++ cs) $2) }
+inner_backquote :: String = [^`]+ ('\`' [^`]+)* { $1 ++ (intercalate [] $ map (\cs -> ['`'] ++ cs) $2) }
 
 target :: Target = [#@] { Target '9' [$1] }
   / [a-z]+ [0-9] { Target $2 $1 }
@@ -53,10 +55,12 @@ main = do
   let x5 = "@g1"
   let x6 = "@e4(> s3-s3e4;s3e4)"
   let x7 = "#F4r4(>`\"foo.txt\"`)"
+  let x8 = "\"foo.txt\""
+  let x9 = "#F4r4(>\"foo.txt\")"
   let f1 = "s3"
   let o1 = "s3"
   let func_args1 = "v3w4"
-  case (mainParser x3) of
+  case (mainParser x9) of
     Right e -> do
       (expandFromExpr e)>>=putStrLn
       putStrLn "-- パース結果 --"
