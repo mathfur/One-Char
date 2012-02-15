@@ -8,7 +8,7 @@ data Expr_ = Obj [(Key, Expr_)]
           | PlainText String
           deriving Show
 
-data Operation = Operation Prefix [Expr_] deriving Show
+data Operation = Operation { prefixOfOperation :: Prefix, exprsOfOperation :: [Expr_]} deriving Show
 
 -- Charには1桁の数字が入る
 data Arg = Arg { arg2Char :: Char, arg2String :: String } deriving Show

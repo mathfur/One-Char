@@ -27,32 +27,41 @@ expandFromExpr (Func as exprs) = do
       expandArg :: Arg -> IO String
       expandArg (Arg d cs) = getWordSpecifiedLength (Just $ read [d]) cs
 expandFromExpr (Sequence_ (Target d cs) os) = do
-  os_ <- joinToString (intercalate "") expandOper os
-  case cs of
-    "@" -> return $ "self" ++ os_
-    "#" -> case os_ of
-       '.':remainder -> return remainder
-       _ -> return os_
-    _ -> do
-      expandedTarget <- (getWordSpecifiedLength (Just $ read [d]) cs)
-      return $ expandedTarget ++ os_
-    where
-      expandOper :: Operation -> IO String
-      expandOper (Operation (Prefix d cs) es) = do
-        case cs of
-          "$" -> (joinToString (\xs -> "[" ++ (intercalate ", " xs) ++ "]") expandFromExpr es)
-          _ -> do
-            expandedExprs <- mapM expandFromExpr es
-            inner <- case (length expandedExprs) of
-              0 -> return ""
-              _ -> return $ "(" ++ (intercalate ", " expandedExprs) ++ ")"
-            expandedPrefix <- (getWordSpecifiedLength (Just $ read [d]) cs)
-            fs <- return $ expandedPrefix ++ inner
-            return $ "." ++ fs
+  if (0 < length os && isReturn (last os))
+    then do
+       substitutee <- (mapM expandFromExpr $ exprsOfOperation $ last os)>>=(return . intercalate ", ")
+       substituter <- expandFromExpr (Sequence_ (Target d cs) (init os))
+       return $ substitutee ++ " = " ++ substituter
+    else do
+      os_ <- joinToString (intercalate "") expandOper os
+      case cs of
+        "@" -> return $ "self" ++ os_
+        "#" -> case os_ of
+           '.':remainder -> return remainder
+           _ -> return os_
+        _ -> do
+          expandedTarget <- (getWordSpecifiedLength (Just $ read [d]) cs)
+          return $ expandedTarget ++ os_
+        where
+          expandOper :: Operation -> IO String
+          expandOper (Operation (Prefix d cs) es) = do
+            case cs of
+              "$" -> (joinToString (\xs -> "[" ++ (intercalate ", " xs) ++ "]") expandFromExpr es)
+              _ -> do
+                expandedExprs <- mapM expandFromExpr es
+                inner <- case (length expandedExprs) of
+                  0 -> return "" -- 引数が無いときは()を付けない
+                  _ -> return $ "(" ++ (intercalate ", " expandedExprs) ++ ")"
+                expandedPrefix <- (getWordSpecifiedLength (Just $ read [d]) cs)
+                fs <- return $ expandedPrefix ++ inner
+                return $ "." ++ fs
 expandFromExpr (PlainText cs) = return cs
 
 getWordSpecifiedLength :: (Maybe Int) -> String -> IO String
 getWordSpecifiedLength l xs
+  | (l == Just 0) = do
+    -- TODO: バッファに保持する
+    return xs
   | (l == Just 1 && (0 < length xs)) = return [head xs]
   | otherwise = do
       dicWords <- (B.readFile "dic/dic.txt">>=(return.(B.split '\n')))
@@ -82,3 +91,6 @@ haveSameHead as bs
 
 joinToString :: ([String] -> String) -> (a -> IO String) -> [a] -> IO String
 joinToString g f as = (mapM f as)>>=(return.g)
+
+isReturn :: Operation -> Bool
+isReturn (Operation (Prefix d cs) es) = (cs == "=" && d == '9')

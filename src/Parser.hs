@@ -39,7 +39,7 @@ func :: Expr_ = ' ' func_args '-' expr (';' expr)* { Func $1 ($2:$3) }
 key :: Key = [a-zA-Z_]+ [0-9] { Key $2 $1 }
 func_args :: [Arg] = func_arg*
 func_arg :: Arg = [a-zA-Z_]+ [0-9] { Arg $2 $1 }
-prefix :: Prefix = '$' { Prefix '9' "$" }
+prefix :: Prefix = [\$=] { Prefix '9' [$1] }
   / [a-zA-Z_]+ [0-9] { Prefix $2 $1 }
 one_char_prefix :: Prefix = [asmt] { Prefix '9' [$1] }
 |]
@@ -57,10 +57,12 @@ main = do
   let x7 = "#F4r4(>`\"foo.txt\"`)"
   let x8 = "\"foo.txt\""
   let x9 = "#F4r4(>\"foo.txt\")"
+  let x10 = "#F4r4(>\"foo.txt\")=(cnt0)"
+  let x11 = "#f1(>`10`)=(x1y1)"
   let f1 = "s3"
   let o1 = "s3"
   let func_args1 = "v3w4"
-  case (mainParser x9) of
+  case (mainParser x11) of
     Right e -> do
       (expandFromExpr e)>>=putStrLn
       putStrLn "-- パース結果 --"
