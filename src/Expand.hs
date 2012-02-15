@@ -21,8 +21,9 @@ expandFromExpr ( Obj pairs ) = do
         (\a b -> a ++ ": " ++ b) <$> (getWordSpecifiedLength (Just $ read [d]) cs) <*> (expandFromExpr expr)
 expandFromExpr (Func as exprs) = do
   args <- (joinToString (intercalate ", ") expandArg as)
-  inner <- intercalate [';'] <$> (mapM expandFromExpr exprs)
-  return $ "function(" ++ args ++ "){ return (" ++ inner ++ ") }"
+  inners <- mapM expandFromExpr exprs
+  let inner = intercalate ['\n'] $ init inners ++ ["return " ++ last inners]
+  return $ "function(" ++ args ++ "){\n" ++ inner ++ "\n}"
     where
       expandArg :: Arg -> IO String
       expandArg (Arg d cs) = getWordSpecifiedLength (Just $ read [d]) cs

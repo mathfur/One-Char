@@ -59,10 +59,13 @@ main = do
   let x9 = "#F4r4(>\"foo.txt\")"
   let x10 = "#F4r4(>\"foo.txt\")=(cnt0)"
   let x11 = "#f1(>`10`)=(x1y1)"
+  let x12 = "e4e(e4)"
+  let x13 = "e4e4(> e4-e4e4)"
+  let x14 = "F4r4"
   let f1 = "s3"
   let o1 = "s3"
   let func_args1 = "v3w4"
-  case (mainParser x11) of
+  case (mainParser x6) of
     Right e -> do
       (expandFromExpr e)>>=putStrLn
       putStrLn "-- パース結果 --"
