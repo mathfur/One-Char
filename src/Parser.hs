@@ -22,7 +22,7 @@ inner_doublequote :: String = [^"]+ ('\\\"' [^"]*)* { $1 ++ (intercalate [] $ ma
 inner_backquote :: String = [^`]+ ('\`' [^`]+)* { $1 ++ (intercalate [] $ map (\cs -> ['`'] ++ cs) $2) }
 
 target :: Target = [#@] { Target '9' [$1] }
-  / [a-z]+ [0-9] { Target $2 $1 }
+  / [a-zA-Z]+ [0-9] { Target $2 $1 }
 operation :: Operation = one_char_prefix '(' inner_parenthsis ')' { Operation $1 $2 }
   / prefix ('(' inner_parenthsis ')')? { Operation $1 (fromMaybe [] $2) }
 
@@ -36,11 +36,11 @@ third_args :: [Expr_] = (' ' key ':' expr)* { if (null $1) then [] else [Obj $1]
 func :: Expr_ = ' ' func_args '-' expr (';' expr)* { Func $1 ($2:$3) }
               / '.' expr (';' expr)*  { Func [] ($1:$2) }
 
-key :: Key = [a-zA-Z_]+ [0-9] { Key $2 $1 }
+key :: Key = [a-zA-Z]+ [0-9] { Key $2 $1 }
 func_args :: [Arg] = func_arg*
-func_arg :: Arg = [a-zA-Z_]+ [0-9] { Arg $2 $1 }
+func_arg :: Arg = [a-zA-Z]+ [0-9] { Arg $2 $1 }
 prefix :: Prefix = [\$=] { Prefix '9' [$1] }
-  / [a-zA-Z_]+ [0-9] { Prefix $2 $1 }
+  / [a-zA-Z]+ [0-9] { Prefix $2 $1 }
 one_char_prefix :: Prefix = [asmt] { Prefix '9' [$1] }
 |]
 
