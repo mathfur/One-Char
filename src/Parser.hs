@@ -41,7 +41,7 @@ func_args :: [Arg] = func_arg*
 func_arg :: Arg = [a-zA-Z]+ [0-9] { Arg $2 $1 }
 prefix :: Prefix = [\$=] { Prefix '9' [$1] }
   / [a-zA-Z]+ [0-9] { Prefix $2 $1 }
-one_char_prefix :: Prefix = [asmt] { Prefix '9' [$1] }
+one_char_prefix :: Prefix = [esmt] { Prefix '9' [$1] }
 |]
 
 mainParser :: String -> Either ParseError Expr_
