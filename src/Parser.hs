@@ -31,7 +31,7 @@ inner_parenthsis :: [Expr_] = head_args ('>' tail_args)? { $1 ++ fromMaybe [] $2
 head_args :: [Expr_] = target* { map (\t -> Sequence_ t []) $1 }
 tail_args :: [Expr_] = second_args third_args func? { $1 ++ $2 ++ maybeToList $3 }
 
-second_args :: [Expr_] = expr*
+second_args :: [Expr_] = (' ' expr)*
 third_args :: [Expr_] = (' ' key ':' expr)* { if (null $1) then [] else [Obj $1] }
 func :: Expr_ = ' ' func_args '-' expr (';' expr)* { Func $1 ($2:$3) }
               / '.' expr (';' expr)*  { Func [] ($1:$2) }
