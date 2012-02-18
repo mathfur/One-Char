@@ -67,6 +67,10 @@ getWordSpecifiedLength l xs
     -- TODO: バッファに保持する
     return xs
   | (l == Just 1 && (0 < length xs)) = return [head xs]
+  | (l == Just 9 && (xs `elem` ["e", "s", "m"])) = case xs of
+    "e" -> return "each"
+    "s" -> return "select"
+    "m" -> return "map"
   | otherwise = do
       dicWords <- (B.readFile "dic/dic.txt">>=(return.(B.split '\n')))
       print $ xs ++ " -> '" ++ (B.unpack $ candidate dicWords) ++ "' #dicWords: " ++ show (length dicWords) ++ " #candidates:" ++ (show $ length $ candidates dicWords)
