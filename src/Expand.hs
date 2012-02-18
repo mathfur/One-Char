@@ -10,6 +10,7 @@ import           Data.Maybe
 import           Data.List
 
 import OneCharType
+import Helpers
 
 expandFromExpr :: Expr_ -> IO String
 expandFromExpr ( Obj pairs ) = do
@@ -18,12 +19,12 @@ expandFromExpr ( Obj pairs ) = do
     where
       expandPair :: (Key, Expr_) -> IO String
       expandPair (Key d cs,expr) = do
-        (\a b -> a ++ ": " ++ b) <$> (getWordSpecifiedLength (Just $ read [d]) cs) <*> (expandFromExpr expr)
+        (\a b -> a ++ " => " ++ b) <$> (getWordSpecifiedLength (Just $ read [d]) cs) <*> (expandFromExpr expr)
 expandFromExpr (Func as exprs) = do
   args <- (joinToString (intercalate ", ") expandArg as)
   inners <- mapM expandFromExpr exprs
-  let inner = intercalate ['\n'] $ init inners ++ ["return " ++ last inners]
-  return $ "function(" ++ args ++ "){\n" ++ inner ++ "\n}"
+  let inner = intercalate ['\n'] inners
+  return $ " do |" ++ args ++ "|\n" ++ inner ++ "\nend"
     where
       expandArg :: Arg -> IO String
       expandArg (Arg d cs) = getWordSpecifiedLength (Just $ read [d]) cs
@@ -49,12 +50,14 @@ expandFromExpr (Sequence_ (Target d cs) os) = do
             case cs of
               "$" -> (joinToString (\xs -> "[" ++ (intercalate ", " xs) ++ "]") expandFromExpr es)
               _ -> do
-                expandedExprs <- mapM expandFromExpr es
-                inner <- case (length expandedExprs) of
+                let (nonFunc, func) = getNonFuncAndFunc es
+                expandedExprs <- mapM expandFromExpr nonFunc
+                funcToStr <- maybe (return "") expandFromExpr $ func
+                nonFuncToStr <- case (length nonFunc) of
                   0 -> return "" -- 引数が無いときは()を付けない
                   _ -> return $ "(" ++ (intercalate ", " expandedExprs) ++ ")"
                 expandedPrefix <- (getWordSpecifiedLength (Just $ read [d]) cs)
-                fs <- return $ expandedPrefix ++ inner
+                fs <- return $ expandedPrefix ++ nonFuncToStr ++ funcToStr
                 return $ "." ++ fs
 expandFromExpr (PlainText cs) = return cs
 

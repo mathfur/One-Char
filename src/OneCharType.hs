@@ -17,3 +17,7 @@ data Arg = Arg { arg2Char :: Char, arg2String :: String } deriving Show
 data Target = Target Char String deriving Show
 data Prefix = Prefix Char String deriving Show
 data Key = Key Char String deriving Show
+
+isFunc :: Expr_ -> Bool
+isFunc ( Func _ _ ) = True
+isFunc _ = False

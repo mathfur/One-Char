@@ -62,10 +62,11 @@ main = do
   let x12 = "e4e(e4)"
   let x13 = "e4e4(> e4-e4e4)"
   let x14 = "F4r4"
+  let x15 = "ar3e4(> #p4 p5-p5d7)"
   let f1 = "s3"
   let o1 = "s3"
   let func_args1 = "v3w4"
-  case (mainParser x6) of
+  case (mainParser x15) of
     Right e -> do
       (expandFromExpr e)>>=putStrLn
       putStrLn "-- パース結果 --"
