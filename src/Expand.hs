@@ -29,11 +29,11 @@ expandFromExpr (Func as exprs) = do
       expandArg :: Arg -> IO String
       expandArg (Arg d cs) = getWordSpecifiedLength (Just $ read [d]) cs
 expandFromExpr (Sequence_ (Target d cs) os) = do
-  if (0 < length os && isReturn (last os))
+  if (0 < length os && isSubstituteLike (last os))
     then do
-       substitutee <- (mapM expandFromExpr $ exprsOfOperation $ last os)>>=(return . intercalate ", ")
-       substituter <- expandFromExpr (Sequence_ (Target d cs) (init os))
-       return $ substitutee ++ " = " ++ substituter
+      substitutee <- (mapM expandFromExpr $ exprsOfOperation $ last os)>>=(return . intercalate ", ")
+      substituter <- expandFromExpr (Sequence_ (Target d cs) (init os))
+      return $ substitutee ++ " " ++ translateSubstituteLike ( substituteLike (last os)) ++ " " ++ substituter
     else do
       os_ <- joinToString (intercalate "") expandOper os
       case cs of
@@ -45,6 +45,10 @@ expandFromExpr (Sequence_ (Target d cs) os) = do
           expandedTarget <- (getWordSpecifiedLength (Just $ read [d]) cs)
           return $ expandedTarget ++ os_
         where
+          translateSubstituteLike :: String -> String
+          translateSubstituteLike xs = case xs of
+            "=+" -> "+="
+            _ -> "="
           expandOper :: Operation -> IO String
           expandOper (Operation (Prefix d cs) es) = do
             case cs of
@@ -100,5 +104,5 @@ haveSameHead as bs
 joinToString :: ([String] -> String) -> (a -> IO String) -> [a] -> IO String
 joinToString g f as = (mapM f as)>>=(return.g)
 
-isReturn :: Operation -> Bool
-isReturn (Operation (Prefix d cs) es) = (cs == "=" && d == '9')
+isSubstituteLike :: Operation -> Bool
+isSubstituteLike (Operation (Prefix d cs) es) = (d == '9') && (cs `elem` ["=", "=+"])

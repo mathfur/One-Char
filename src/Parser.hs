@@ -23,8 +23,9 @@ inner_backquote :: String = [^`]+ ('\`' [^`]+)* { $1 ++ (intercalate [] $ map (\
 
 target :: Target = [#@] { Target '9' [$1] }
   / [a-zA-Z]+ [0-9] { Target $2 $1 }
-operation :: Operation = one_char_prefix '(' inner_parenthsis ')' { Operation $1 $2 }
+operation :: Operation = autoPrefix '(' inner_parenthsis ')' { Operation $1 $2 }
   / prefix ('(' inner_parenthsis ')')? { Operation $1 (fromMaybe [] $2) }
+
 
 inner_parenthsis :: [Expr_] = head_args ('>' tail_args)? { $1 ++ fromMaybe [] $2 }
 
@@ -41,7 +42,10 @@ func_args :: [Arg] = func_arg*
 func_arg :: Arg = [a-zA-Z]+ [0-9] { Arg $2 $1 }
 prefix :: Prefix = [\$=] { Prefix '9' [$1] }
   / [a-zA-Z]+ [0-9] { Prefix $2 $1 }
-one_char_prefix :: Prefix = [esmt] { Prefix '9' [$1] }
+autoPrefix :: Prefix = autoMark { Prefix '9' $1 }
+
+autoMark :: String = '=+' { "=+" }
+  / [emst] { [$1] }
 |]
 
 mainParser :: String -> Either ParseError Expr_
@@ -64,10 +68,11 @@ main = do
   let x14 = "F4r4"
   let x15 = "ar3e4(> #p4 p5-p5d7)"
   let x16 = "#D3$(p4)e(p4)"
+  let x17 = "w4sn4(> `/\\w+/`)=+(w4)"
   let f1 = "s3"
   let o1 = "s3"
   let func_args1 = "v3w4"
-  case (mainParser x15) of
+  case (mainParser x17) of
     Right e -> do
       (expandFromExpr e)>>=putStrLn
       putStrLn "-- パース結果 --"

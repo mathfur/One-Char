@@ -42,16 +42,17 @@ compiledSourceSplice :: Splice AppHandler
 compiledSourceSplice = do
     statement <- decodedParam "statement"
     result <- (liftIO $ expand $ B.unpack statement)
+    let outputStr = either (\s -> (B.unpack statement) ++ " e") id result
     --return $ [TextNode $ T.pack $ ">>'" ++ (B.unpack statement) ++ "' -> '" ++ result ++ "'<<"]
-    return $ [TextNode $ T.pack result]
+    return $ [TextNode $ T.pack outputStr]
   where
     decodedParam p = fromMaybe "" <$> getParam p
 
-expand :: String -> IO String
+expand :: String -> IO (Either String String)
 expand src = do
     case (mainParser src) of
-      Right e -> expandFromExpr e
-      Left e -> return $ show e
+      Right e -> (expandFromExpr e)>>=(return.Right)
+      Left e -> return $ Left $ show e
       -- TODO: eitherでまとめられる?
 
 ------------------------------------------------------------------------------
