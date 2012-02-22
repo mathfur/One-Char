@@ -21,7 +21,8 @@ expr :: Expr_ = '\"' inner_doublequote '\"' { PlainText $ "\"" ++ $1 ++ "\""}
 inner_doublequote :: String = [^"]+ ('\\\"' [^"]*)* { $1 ++ (intercalate [] $ map (\cs -> ['\"'] ++ cs) $2) }
 inner_backquote :: String = [^`]+ ('\`' [^`]+)* { $1 ++ (intercalate [] $ map (\cs -> ['`'] ++ cs) $2) }
 
-target :: Target = [#@] { Target '9' [$1] }
+target :: Target = '`' inner_backquote '`' '0' { Target '0' $1 } -- `w1`0のように新しく定義する単語に数字が入っている場合に使う
+  / [#@] { Target '9' [$1] }
   / [a-zA-Z]+ [0-9] { Target $2 $1 }
 operation :: Operation = autoPrefix '(' inner_parenthsis ')' { Operation $1 $2 }
   / prefix ('(' inner_parenthsis ')')? { Operation $1 (fromMaybe [] $2) }
@@ -58,7 +59,7 @@ main = do
   let x4 = "#D3"
   let x5 = "@g1"
   let x6 = "@e4(> s3-s3e4;s3e4)"
-  let x7 = "#F4r4(>`\"foo.txt\"`)"
+  let x7 = "#F4r4(> `\"foo.txt\"`)"
   let x8 = "\"foo.txt\""
   let x9 = "#F4r4(> \"foo.txt\")"
   let x10 = "#F4r4(> \"foo.txt\")=(cnt0)"
@@ -69,10 +70,11 @@ main = do
   let x15 = "ar3e4(> #p4 p5-p5d7)"
   let x16 = "#D3$(p4)e(p4)"
   let x17 = "w4sn4(> `/\\w+/`)=+(w4)"
+  let x18 = "x1=(`w1`0)"
   let f1 = "s3"
   let o1 = "s3"
   let func_args1 = "v3w4"
-  case (mainParser x17) of
+  case (mainParser x11) of
     Right e -> do
       (expandFromExpr e)>>=putStrLn
       putStrLn "-- パース結果 --"
